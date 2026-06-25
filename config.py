@@ -1,4 +1,16 @@
 from dotenv import load_dotenv
+import os
+import logging
+import warnings
+
+os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+
+warnings.filterwarnings("ignore")
 
 load_dotenv()
 
@@ -7,7 +19,7 @@ LLM_REPO = "meta-llama/Llama-3.1-8B-Instruct"
 
 TEMPERATURE = 0.2
 
-CHUNK_SIZE = 1000
-CHUNK_OVERLAP = 200
+CHUNK_SIZE = 700
+CHUNK_OVERLAP = 150
 
-TOP_K = 4
+TOP_K = 8

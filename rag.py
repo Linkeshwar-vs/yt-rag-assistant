@@ -39,8 +39,12 @@ def build_rag_chain(transcript):
     )
 
     retriever = vector_store.as_retriever(
-        search_type="similarity",
-        search_kwargs={"k": TOP_K},
+        search_type="mmr",
+        search_kwargs={
+            "k": 8,
+            "fetch_k": 20,
+            "lambda_mult": 0.7,
+        },
     )
 
     llm = HuggingFaceEndpoint(
@@ -53,20 +57,30 @@ def build_rag_chain(transcript):
 
     prompt = PromptTemplate(
         template="""
-You are a helpful assistant.
+    You are a Retrieval-Augmented Generation (RAG) assistant.
 
-Answer ONLY from the provided transcript.
+    Use ONLY the transcript context below.
 
-If the answer is unavailable, simply say:
+    Instructions:
 
-"I couldn't find this information in the transcript."
+    - Never use outside knowledge.
+    - If the answer is not present, reply exactly:
+    "I couldn't find this information in the transcript."
+    - Give complete, informative answers.
+    - When multiple transcript sections discuss the topic, combine them into one coherent response.
+    - If appropriate, organize the answer using bullet points.
+    - Do not repeat information unnecessarily.
 
-Context:
-{context}
+    Transcript Context:
+    --------------------
+    {context}
+    --------------------
 
-Question:
-{question}
-""",
+    Question:
+    {question}
+
+    Answer:
+    """,
         input_variables=["context", "question"],
     )
 
