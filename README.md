@@ -72,6 +72,10 @@ Create a `.env` file:
 HF_TOKEN=your_huggingface_token
 ```
 
+You can obtain your Hugging Face access token from:
+
+https://huggingface.co/settings/tokens
+
 Run the application:
 
 ```bash
@@ -81,3 +85,11 @@ python app.py
 ## License
 
 MIT License
+
+## Author
+
+Linkeshwar VS
+
+B.Tech Computer Science and Engineering (AI & ML)
+
+VIT Chennai
