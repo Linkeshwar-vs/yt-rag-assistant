@@ -1,125 +1,83 @@
 # YouTube RAG Assistant
 
-A Retrieval-Augmented Generation (RAG) application that answers questions about any YouTube video using its transcript.
+A Retrieval-Augmented Generation (RAG) application that answers questions about YouTube videos using their transcripts.
 
-Instead of relying on general knowledge, the assistant retrieves relevant transcript chunks using semantic search and generates context-aware answers using **Llama 3.1**.
-
+The project extracts a video's transcript, stores it in a FAISS vector database, retrieves the most relevant sections using MMR retrieval and Cross-Encoder re-ranking, and generates responses with Llama 3.1.
 
 ## Features
 
-- Supports full YouTube URLs
-- Extracts transcripts directly from YouTube videos
-- Splits transcripts into semantic chunks
-- Generates embeddings using Sentence Transformers
-- Stores embeddings in a FAISS vector database
-- Retrieves the most relevant transcript sections
-- Answers questions using Llama 3.1 via HuggingFace
-
+* Accepts full YouTube URLs
+* Extracts video transcripts
+* Semantic search using FAISS
+* MMR-based retrieval
+* Cross-Encoder re-ranking
+* Answers using Llama 3.1
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| Language | Python |
-| LLM | Llama 3.1 8B Instruct |
-| Framework | LangChain |
-| Embeddings | all-MiniLM-L6-v2 |
-| Vector Database | FAISS |
-| Transcript Source | YouTube Transcript API |
-| Environment | Python Dotenv |
+* Python
+* LangChain
+* Hugging Face
+* FAISS
+* Sentence Transformers
+* YouTube Transcript API
 
+## Pipeline
+
+```
+YouTube URL
+      ↓
+Transcript Extraction
+      ↓
+Text Chunking
+      ↓
+Embeddings
+      ↓
+FAISS
+      ↓
+MMR Retrieval
+      ↓
+Cross-Encoder Re-ranking
+      ↓
+Llama 3.1
+      ↓
+Answer
+```
 
 ## Project Structure
 
 ```
-youtube-rag-assistant/
-│
-├── app.py              # Entry point
-├── config.py           # Configuration values
-├── rag.py              # RAG pipeline
-├── transcript.py       # Transcript extraction
-├── utils.py            # Helper functions
-│
-├── requirements.txt
-├── README.md
-└── .gitignore
+app.py
+config.py
+rag.py
+transcript.py
+utils.py
 ```
-
-
-
-## Architecture
-
-```
-                User
-                  │
-                  ▼
-         Enter YouTube URL
-                  │
-                  ▼
-      YouTube Transcript API
-                  │
-                  ▼
-      Transcript Extraction
-                  │
-                  ▼
-     Recursive Text Splitter
-                  │
-                  ▼
-SentenceTransformer Embeddings
-                  │
-                  ▼
-          FAISS Vector Store
-                  │
-                  ▼
-            Similarity Search
-                  │
-                  ▼
-             Prompt Template
-                  │
-                  ▼
-        Llama 3.1 (HuggingFace)
-                  │
-                  ▼
-            Generated Answer
-```
-
 
 ## Installation
 
-Clone the repository
-
 ```bash
-git clone https://github.com/yourusername/youtube-rag-assistant.git
+git clone https://github.com/Linkeshwar-vs/yt-rag-assistant.git
+cd yt-rag-assistant
 
-cd youtube-rag-assistant
-```
+python -m venv venv
+venv\Scripts\activate
 
-Install dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-
-
-## Environment Variables
-
-Create a `.env` file in the project root.
+Create a `.env` file:
 
 ```
 HF_TOKEN=your_huggingface_token
 ```
 
-You can obtain your Hugging Face access token from:
+Run the application:
 
-https://huggingface.co/settings/tokens
+```bash
+python app.py
+```
 
+## License
 
-
-## Author
-
-**Linkeshwar VS**
-
-B.Tech Computer Science and Engineering (AI & ML)
-
-VIT Chennai
+MIT License
