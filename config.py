@@ -22,4 +22,9 @@ TEMPERATURE = 0.2
 CHUNK_SIZE = 700
 CHUNK_OVERLAP = 150
 
-TOP_K = 8
+
+RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+TOP_K = 20
+
+FINAL_K = 5

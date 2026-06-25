@@ -1,5 +1,5 @@
+from transformers.utils import logging
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
 from langchain_huggingface import (
     HuggingFaceEmbeddings,
     HuggingFaceEndpoint,
@@ -16,8 +16,49 @@ from langchain_core.runnables import (
 )
 
 from langchain_core.output_parsers import StrOutputParser
+from sentence_transformers import CrossEncoder
 from config import *
-from utils import format_docs
+
+logging.set_verbosity_error()
+reranker = CrossEncoder(RERANKER_MODEL)
+
+
+def format_docs(docs):
+
+    formatted = []
+
+    for i, doc in enumerate(docs, start=1):
+
+        formatted.append(
+            f"Transcript Section {i}\n"
+            f"{doc.page_content}"
+        )
+
+    return "\n\n".join(formatted)
+
+
+def rerank_documents(question, docs):
+
+    if len(docs) <= FINAL_K:
+        return docs
+
+    pairs = [
+        (question, doc.page_content)
+        for doc in docs
+    ]
+
+    scores = reranker.predict(pairs)
+
+    ranked_docs = sorted(
+        zip(scores, docs),
+        key=lambda x: x[0],
+        reverse=True
+    )
+
+    return [
+        doc
+        for _, doc in ranked_docs[:FINAL_K]
+    ]
 
 
 def build_rag_chain(transcript):
@@ -41,8 +82,8 @@ def build_rag_chain(transcript):
     retriever = vector_store.as_retriever(
         search_type="mmr",
         search_kwargs={
-            "k": 8,
-            "fetch_k": 20,
+            "k": TOP_K,
+            "fetch_k": TOP_K * 2,
             "lambda_mult": 0.7,
         },
     )
@@ -59,17 +100,22 @@ def build_rag_chain(transcript):
         template="""
     You are a Retrieval-Augmented Generation (RAG) assistant.
 
-    Use ONLY the transcript context below.
+    Your ONLY source of truth is the transcript context provided below.
 
-    Instructions:
+    Rules:
 
-    - Never use outside knowledge.
-    - If the answer is not present, reply exactly:
+    - Use ONLY the transcript.
+    - NEVER use outside knowledge.
+    - NEVER guess.
+    - NEVER hallucinate.
+    - If the answer is not present in the transcript, respond exactly:
+
     "I couldn't find this information in the transcript."
-    - Give complete, informative answers.
-    - When multiple transcript sections discuss the topic, combine them into one coherent response.
-    - If appropriate, organize the answer using bullet points.
-    - Do not repeat information unnecessarily.
+
+    - When information is spread across multiple transcript sections, combine it into one coherent answer.
+    - Prefer detailed explanations over one-line responses.
+    - Organize long answers using bullet points when appropriate.
+    - Quote or paraphrase relevant transcript information whenever possible.
 
     Transcript Context:
     --------------------
@@ -84,13 +130,21 @@ def build_rag_chain(transcript):
         input_variables=["context", "question"],
     )
 
+    def retrieve_and_rerank(question):
+
+        docs = retriever.invoke(question)
+
+        docs = rerank_documents(question, docs)
+
+        return format_docs(docs)
+
     chain = (
         RunnableParallel(
             {
-                "context": retriever
-                | RunnableLambda(format_docs),
+                "context": RunnableLambda(retrieve_and_rerank),
                 "question": RunnablePassthrough(),
             }
-        )   | prompt | model | StrOutputParser()
+        ) | prompt | model | StrOutputParser()
     )
+
     return chain
